@@ -108,7 +108,7 @@ label.qq{display:block}
 <div class="wrap" id="app"></div>
 <script>
 // ▼ 선생님 점수 받는 웹 앱 주소 (구글 Apps Script 배포 후 아래 따옴표 안에 붙여넣기)
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxuRDqWWgKk-pYtnTOVet5Ln4AvhfQr9-zWeE6SJE_TCA4EWrXvbJRruHbrTpp4xiHR/exec';
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwRjiMZ1EoxIdh20l2Mpk2hYR7DtBE6tvF3LBeY-kIAQUB6VUj0JyDgDSNtZXDzy_9b-A/exec';
 const QUIZ_NAME = '컴퓨팅 시스템과 운영체제';
 
 const DATA = {
@@ -306,8 +306,8 @@ const DATA = {
 const MARKS = ['①', '②', '③', '④'];
 const BAR = ['#1E5A9C', '#4A3A8F', '#0F6B5C', '#A84B0C', '#8E2D5B'];
 const NP = 5, PS = [0, 1, 2, 3, 4];
-const fresh = () => ({ part: 0, ans: [{}, {}, {}, {}, {}], graded: [false, false, false, false, false], sel: -1, sent: '' });
-const S = Object.assign({ screen: 'start', sid: '', name: '', ver: '', msg: '' }, fresh());
+const fresh = () => ({ part: 0, ans: [{}, {}, {}, {}, {}], graded: [false, false, false, false, false], sel: -1, sent: '', retry: false, selfU: 0, selfC: [], selfT: '' });
+const S = Object.assign({ screen: 'start', school: '', sid: '', name: '', ver: '', msg: '' }, fresh());
 let dragI = -1;
 const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const ver = () => DATA.versions.find((x) => x.id === S.ver) || null;
@@ -336,6 +336,7 @@ function setAns(p, i, val) { if (val === null) delete S.ans[p][i]; else S.ans[p]
 function vStart() {
   return `<header><div style="flex:1 1 420px;min-width:0"><div class="kick">중학교 정보 · 컴퓨팅 시스템 · 운영체제</div><h1 class="disp">컴퓨터는 어떻게 일할까?</h1><p class="lead">하드웨어와 소프트웨어, 다섯 가지 장치, 스마트폰 속 부품, 가게에서 음식을 만드는 과정으로 컴퓨터의 동작 원리를 확인해요.</p></div></header>
   <div class="panel" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px">
+   <div><label for="sschool" style="font-size:15px;font-weight:700;display:block;margin-bottom:6px">학교</label><input class="t" id="sschool" autocomplete="off" placeholder="예: ○○중학교" value="${esc(S.school)}"></div>
    <div><label for="sid" style="font-size:15px;font-weight:700;display:block;margin-bottom:6px">학번</label><input class="t" id="sid" inputmode="numeric" autocomplete="off" placeholder="예: 10315" value="${esc(S.sid)}"></div>
    <div><label for="sname" style="font-size:15px;font-weight:700;display:block;margin-bottom:6px">이름</label><input class="t" id="sname" autocomplete="off" placeholder="예: 김다산" value="${esc(S.name)}"></div></div>
   <div class="navhead"><h2 class="disp" style="font-size:26px">풀 유형 고르기</h2><button class="btn ghost" data-act="random" style="min-height:44px;font-size:15px">무작위로 고르기</button></div>
@@ -346,7 +347,7 @@ function vStart() {
 
 function vHeader(v, sizes, sum) {
   const tiles = PS.map((p) => `<div class="tile"><small>${p + 1}단계</small><b>${S.graded[p] ? score(v, p) : '–'}<span> /${maxOf(v, p)}</span></b></div>`).join('') + `<div class="tile dark"><small>합계</small><b>${sum}<span> /100</span></b></div>`;
-  return `<header><div style="flex:1 1 420px;min-width:0"><div class="kick">중학교 정보 · 컴퓨팅 시스템 · 운영체제</div><h1 class="disp">컴퓨터는 어떻게 일할까?</h1><p class="lead"><b style="color:var(--ink)">${esc(S.sid + ' ' + S.name)} · ${v.name} ${v.theme}</b> · 아래 단계 버튼을 눌러 어느 단계로든 옮겨 갈 수 있어요.</p></div><div class="tiles">${tiles}</div></header>`;
+  return `<header><div style="flex:1 1 420px;min-width:0"><div class="kick">중학교 정보 · 컴퓨팅 시스템 · 운영체제</div><h1 class="disp">컴퓨터는 어떻게 일할까?</h1><p class="lead"><b style="color:var(--ink)">${esc(S.school + ' ' + S.sid + ' ' + S.name)} · ${v.name} ${v.theme}</b> · 아래 단계 버튼을 눌러 어느 단계로든 옮겨 갈 수 있어요.</p></div><div class="tiles">${tiles}</div></header>`;
 }
 
 function vSteps(v, sizes, labels, all) {
@@ -429,18 +430,41 @@ function vP5(v, offs) {
   <h3 style="margin:4px 0 0;font-size:18px">단답형</h3><div class="qlist">${shorts}</div><h3 style="margin:4px 0 0;font-size:18px">서술형</h3><div class="qlist">${essays}</div></section>`;
 }
 
+const HARD = ['하드웨어·소프트웨어 구분', '입력·처리·출력·저장·통신 분류', '스마트폰 속 부품', '주기억·보조기억장치', '운영체제의 자원 관리', 'CPU 스케줄링·프로세스'];
+function reviewHtml(v, offs) {
+  const out = [];
+  PS.forEach((p) => { if (!S.graded[p]) return;
+    for (let k = 0; k < size(v, p); k++) {
+      const i = p === 1 ? DATA.order[k] : k; if (ok(v, p, i)) continue;
+      let q, a, w;
+      if (p === 1) { const it = v.p2[i]; q = it.t + ' 은(는) 어느 장치일까요?'; a = cat(it.a).label + ' 장치'; w = it.w || cat(it.a).hint + '.'; }
+      else if (p === 4) { const x = p5Of(v), ns = x.short.length; if (i < ns) { q = x.short[i].q; a = x.short[i].ans; w = x.short[i].w; } else { const e = x.essay[i - ns]; q = (e.s ? e.s + ' ' : '') + e.q; a = '예시 답안'; w = e.model; } }
+      else { const o = qs(v, p)[i]; q = (o.term ? o.term + ' · ' : '') + (o.s ? o.s + ' ' : '') + o.q; a = o.o[o.a]; w = o.w; }
+      out.push(`<p class="wline"><b>${offs[p] + k + 1}번</b> ${q}<br><b style="color:var(--ok)">정답: ${a}</b> · ${w}</p>`);
+    } });
+  return out.length ? `<details class="panel" open><summary style="cursor:pointer;font-weight:700;font-size:16px">복습 노트 · 틀린 문제 해설 모아보기 (${out.length}문제)</summary><div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">${out.join('')}</div></details>` : '';
+}
+function selfHtml() {
+  const dis = S.sent === 'ok' || S.sent === 'sending';
+  return `<div class="panel" style="display:flex;flex-direction:column;gap:12px"><b style="font-size:16px">오늘 수업 돌아보기 <span style="font-weight:400;font-size:14px;color:var(--muted)">(선택 · 점수와 함께 선생님께 가요)</span></b>
+  <div class="ng"><span>이해한 정도</span><span style="font-weight:400">1 어려움</span>${[1, 2, 3, 4, 5].map((n) => `<button class="qn ${S.selfU === n ? 'done' : ''}" data-act="rate" data-n="${n}" aria-pressed="${S.selfU === n}" ${dis ? 'disabled' : ''}>${n}</button>`).join('')}<span style="font-weight:400">5 매우 잘 이해</span></div>
+  <div class="ng"><span>어려웠던 개념</span>${HARD.map((h, i) => `<button class="btn ${S.selfC.includes(i) ? '' : 'ghost'}" style="min-height:40px;padding:4px 12px;font-size:14px" data-act="hard" data-c="${i}" aria-pressed="${S.selfC.includes(i)}" ${dis ? 'disabled' : ''}>${h}</button>`).join('')}</div>
+  <textarea class="essay" id="selfT" rows="2" maxlength="200" placeholder="선생님께 하고 싶은 말이나 궁금한 점 (선택)" ${dis ? 'readonly' : ''}>${esc(S.selfT)}</textarea></div>`;
+}
 function vFinal(v, sizes, offs, labels, sum, all) {
   const verdict = !all ? '모든 단계를 채점해야 최종 점수를 보낼 수 있어요. 위의 단계 버튼을 눌러 남은 단계를 마무리하세요.' : sum >= 90 ? '아주 잘했어요! 컴퓨터가 입력·처리·출력·저장·통신으로 일하는 방식을 잘 이해하고 있어요.' : sum >= 70 ? '잘했어요. 틀린 문제를 다시 눌러 설명을 읽어 보세요.' : '좋은 출발이에요. 틀린 문제의 설명을 읽고 다른 유형으로 다시 도전해 보세요.';
   const rows = PS.map((p) => { const sc = score(v, p), mx = maxOf(v, p); return `<div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;gap:12px;font-size:15px"><b>${p + 1}. ${labels[p]}</b><span style="color:var(--sub)">${S.graded[p] ? (p === 4 ? '가채점 ' : '') + sc + ' / ' + mx + '점' : '아직 채점 전'}</span></div><div class="bar"><i style="width:${S.graded[p] ? Math.round(sc / mx * 100) : 0}%;background:${BAR[p]}"></i></div></div>`; }).join('');
   const wl = [];
   PS.forEach((p) => { if (!S.graded[p]) return; for (let k = 0; k < sizes[p]; k++) { const i = p === 1 ? DATA.order[k] : k; if (ok(v, p, i)) continue; const n = offs[p] + k + 1; wl.push(`<button class="wbtn" data-act="jump" data-p="${p}" data-k="${k}">${n}번 · ${p === 1 ? v.p2[i].t : p === 0 ? v.p1[i].t : p === 4 ? (k < p5Of(v).short.length ? '단답형' : '서술형') : n + '번 문제'}</button>`); } });
   const notYet = PS.filter((p) => !S.graded[p]).map((p) => p + 1);
-  const note = { sending: ['보내는 중이에요…', 'var(--sub)'], ok: ['선생님 시트로 최종 점수를 보냈어요. 수고했어요!', 'var(--ok)'], fail: ['보내지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요.', 'var(--bad)'] }[S.sent] || (notYet.length ? ['채점하지 않은 단계: ' + notYet.join(', ') + '단계', 'var(--bad)'] : null);
-  const can = all && S.sent !== 'ok' && S.sent !== 'sending';
-  return `<section style="display:flex;flex-direction:column;gap:18px"><div class="banner"><div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:14px;font-weight:700;opacity:.8">${esc(S.sid + ' ' + S.name)} · ${v.name} ${v.theme} · 최종 점수</span><span class="big">${sum}<span> / 100점</span></span></div><p style="margin:0;font-size:16px;line-height:1.6;max-width:520px">${verdict}</p></div>
+  let note = { sending: ['보내는 중이에요…', 'var(--sub)'], ok: ['선생님 시트로 최종 점수를 보냈어요. 수고했어요!', 'var(--ok)'], fail: ['보내지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요.', 'var(--bad)'] }[S.sent] || (notYet.length ? ['채점하지 않은 단계: ' + notYet.join(', ') + '단계', 'var(--bad)'] : null);
+  if (S.retry) note = ['연습 중이에요. 점수는 처음 제출한 점수만 선생님께 기록돼요.', 'var(--sub)'];
+  const can = all && !S.retry && S.sent !== 'ok' && S.sent !== 'sending';
+  return `<section style="display:flex;flex-direction:column;gap:18px"><div class="banner"><div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:14px;font-weight:700;opacity:.8">${esc(S.school + ' ' + S.sid + ' ' + S.name)} · ${v.name} ${v.theme} · 최종 점수</span><span class="big">${sum}<span> / 100점</span></span></div><p style="margin:0;font-size:16px;line-height:1.6;max-width:520px">${verdict}</p></div>
   <div class="panel" style="padding:20px;display:flex;flex-direction:column;gap:14px">${rows}</div>
   ${wl.length ? `<div class="panel" style="display:flex;flex-direction:column;gap:10px"><b style="font-size:16px">틀린 문제 다시 보기 · 누르면 그 문제로 가요</b><div style="display:flex;flex-wrap:wrap;gap:8px">${wl.join('')}</div></div>` : ''}
-  <div class="row-end">${note ? `<span class="grow" role="status" style="color:${note[1]};font-size:15px;line-height:1.5">${note[0]}</span>` : ''}<button class="btn ghost" data-act="again">다른 유형 풀기</button><button class="btn" data-act="submit" ${can ? '' : 'disabled'}>${S.sent === 'ok' ? '보내기 완료' : S.sent === 'fail' ? '다시 보내기' : '선생님께 최종 점수 보내기'}</button></div></section>`;
+  ${reviewHtml(v, offs)}${selfHtml()}
+  <div class="row-end">${note ? `<span class="grow" role="status" style="color:${note[1]};font-size:15px;line-height:1.5">${note[0]}</span>` : ''}${S.sent === 'ok' && !S.retry && wl.length ? '<button class="btn ghost" data-act="retry">틀린 문제만 다시 풀기</button>' : ''}<button class="btn ghost" data-act="again">다른 유형 풀기</button><button class="btn" data-act="submit" ${can ? '' : 'disabled'}>${S.sent === 'ok' ? '보내기 완료' : S.sent === 'fail' ? '다시 보내기' : '선생님께 최종 점수 보내기'}</button></div></section>`;
 }
 
 function render() {
@@ -460,16 +484,22 @@ function render() {
 }
 
 async function submit() {
-  const v = ver(); if (!v || !S.graded.every(Boolean) || S.sent === 'ok' || S.sent === 'sending') return;
+  const v = ver(); if (S.retry) return; if (!v || !S.graded.every(Boolean) || S.sent === 'ok' || S.sent === 'sending') return;
   if (!/^https:\/\/script\.google\.com\//.test(SHEET_URL)) { alert('선생님 설정이 필요해요: HTML 파일의 SHEET_URL에 웹 앱 주소를 넣어 주세요.'); return; }
   const labels = DATA.parts; // 시트 칸 이름이 유형마다 같도록 고정 이름 사용
   const parts = PS.map((p) => ({ label: (p + 1) + '. ' + labels[p] + (p === 4 ? '(가채점)' : ''), score: score(v, p) }));
   const total = parts.reduce((a, p) => a + p.score, 0);
   const max = PS.reduce((a, p) => a + maxOf(v, p), 0);
   // 단답·서술형 답안과 서술형 가채점 점수도 함께 보내요 (교사가 시트에서 확인 후 최종 점수 결정)
-  const x = p5Of(v), ns = x.short.length, extra = { version: v.name + ' ' + v.theme };
+  const x = p5Of(v), ns = x.short.length, extra = { '학교': S.school.trim(), version: v.name + ' ' + v.theme };
   x.short.forEach((q, i) => { extra['단답' + (i + 1)] = S.ans[4][i] || ''; });
   x.essay.forEach((e, j) => { extra['서술' + (j + 1)] = S.ans[4][ns + j] || ''; extra['서술' + (j + 1) + '_가채점'] = essayEval(e, S.ans[4][ns + j]).score; });
+  let n = 0;
+  PS.forEach((p) => { for (let k = 0; k < size(v, p); k++) { n++; const i = p === 1 ? DATA.order[k] : k; let pt;
+    if (p === 4) { const ns2 = x.short.length; pt = i < ns2 ? (shortOk(x.short[i], S.ans[4][i]) ? DATA.shortPts : 0) : essayEval(x.essay[i - ns2], S.ans[4][i]).score; }
+    else pt = ok(v, p, i) ? DATA.pts[p] : 0;
+    extra['문항' + String(n).padStart(2, '0')] = pt; } });
+  extra['이해도'] = S.selfU || ''; extra['어려운개념'] = S.selfC.map((i) => HARD[i]).join(', '); extra['한마디'] = S.selfT.trim();
   const payload = { v: 1, quiz: QUIZ_NAME, sid: S.sid, name: S.name, total, max, parts, extra };
   set({ sent: 'sending' });
   try { await fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) }); set({ sent: 'ok' }); }
@@ -477,6 +507,8 @@ async function submit() {
 }
 
 document.addEventListener('input', (e) => {
+  if (e.target.id === 'selfT') S.selfT = e.target.value.slice(0, 200);
+  if (e.target.id === 'sschool') S.school = e.target.value.slice(0, 20);
   if (e.target.id === 'sid') S.sid = e.target.value.replace(/\s/g, '').slice(0, 10);
   if (e.target.id === 'sname') S.name = e.target.value.slice(0, 20);
   if (e.target.dataset && e.target.dataset.p5 !== undefined && !S.graded[4]) {
@@ -492,7 +524,7 @@ document.addEventListener('click', (e) => {
   if (a === 'ver') set({ ver: b.dataset.v, msg: '' });
   else if (a === 'random') set({ ver: DATA.versions[Math.floor(Math.random() * DATA.versions.length)].id, msg: '' });
   else if (a === 'begin') {
-    if (!S.sid || !S.name.trim()) return set({ msg: '학번과 이름을 모두 입력하세요.' });
+    if (!S.school.trim() || !S.sid || !S.name.trim()) return set({ msg: '학교, 학번, 이름을 모두 입력하세요.' });
     if (!v) return set({ msg: '풀 유형을 하나 고르세요.' });
     set(Object.assign({ screen: 'quiz', msg: '' }, fresh()), true);
   }
@@ -508,6 +540,13 @@ document.addEventListener('click', (e) => {
   else if (a === 'chip') { const i = +b.dataset.i; set({ sel: S.sel === i ? -1 : i }); }
   else if (a === 'place') { if (S.sel >= 0) setAns(1, S.sel, b.dataset.c); }
   else if (a === 'unplace') { if (!S.graded[1]) setAns(1, +b.dataset.i, null); }
+  else if (a === 'rate') { const y = window.scrollY; set({ selfU: +b.dataset.n }); window.scrollTo(0, y); }
+  else if (a === 'hard') { const y = window.scrollY, c = +b.dataset.c, l = S.selfC.slice(), k = l.indexOf(c); if (k < 0) l.push(c); else l.splice(k, 1); set({ selfC: l }); window.scrollTo(0, y); }
+  else if (a === 'retry') {
+    let first = -1;
+    PS.forEach((p) => { let any = false; for (let k = 0; k < size(v, p); k++) { const i = p === 1 ? DATA.order[k] : k; if (!ok(v, p, i)) { delete S.ans[p][i]; any = true; } } if (any) { S.graded[p] = false; if (first < 0) first = p; } });
+    set({ retry: true, part: first < 0 ? 0 : first, sel: -1 }, true);
+  }
   else if (a === 'submit') submit();
   else if (a === 'again') {
     if (S.sent !== 'ok' && S.graded.every(Boolean) && !confirm('아직 점수를 보내지 않았어요. 그래도 처음으로 돌아갈까요?')) return;
