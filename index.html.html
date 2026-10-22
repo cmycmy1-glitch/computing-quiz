@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>컴퓨터는 어떻게 일할까? · 컴퓨팅 시스템 퀴즈</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ===== 디자인 토큰 (부품 짝꿍 찾기와 같은 디자인) ===== */
+:root{--ground:#EDF1EF;--ink:#16211C;--sub:#3B4A44;--muted:#4A5A53;--line:#A7B3AD;--soft:#E1E6E3;--card:#FFFFFF;--ok:#1B7F4B;--okbg:#E3F3EA;--bad:#B42318;--badbg:#FDE7E4;--focus:#1E5A9C;--warm:#FBEADB;--warmink:#5E2A05}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:'IBM Plex Sans KR',sans-serif}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+button:disabled{cursor:default}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.disp{font-family:'Do Hyeon',sans-serif;font-weight:400}
+.wrap{max-width:1200px;margin:0 auto;padding:32px 20px 64px;display:flex;flex-direction:column;gap:24px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:20px}
+.kick{font-size:14px;font-weight:700;color:var(--muted);letter-spacing:.02em}
+h1{margin:6px 0;font-size:44px;line-height:1.15}
+.lead{margin:0;font-size:16px;line-height:1.6;color:var(--sub)}
+.tiles{display:flex;gap:8px;flex-wrap:wrap}
+.tile{min-width:84px;padding:10px 14px;border-radius:12px;background:#fff;display:flex;flex-direction:column;gap:2px}
+.tile.dark{background:var(--ink);color:#fff}
+.tile small{font-size:12px;font-weight:700}
+.tile b{font-family:'Do Hyeon',sans-serif;font-weight:400;font-size:28px;line-height:1}.tile b span{font-size:15px;opacity:.75}
+.panel{background:#fff;border-radius:16px;padding:18px}
+.btn{min-height:52px;padding:10px 22px;border-radius:12px;border:2px solid var(--ink);background:var(--ink);color:#fff;font-weight:700;font-size:16px}
+.btn.ghost{background:#fff;color:var(--ink)}
+.btn:disabled{border-color:var(--line);background:var(--soft);color:var(--muted)}
+.row-end{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:flex-end}
+.row-end .grow{margin-right:auto;font-size:16px;font-weight:700}
+.alert{color:var(--bad);font-weight:700;font-size:15px}
+h2{margin:0;font-size:28px}
+.rule{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;color:var(--sub);background:#fff;border-radius:12px;padding:12px 16px}.rule b{color:var(--ink)}
+input.t{width:100%;min-height:52px;padding:0 14px;border:2px solid var(--line);border-radius:12px;font-size:18px;color:var(--ink)}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.vcard{min-height:120px;padding:16px;border-radius:16px;border:2px solid var(--ink);background:#fff;color:var(--ink);text-align:left;display:flex;flex-direction:column;gap:6px}
+.vcard.on{background:var(--ink);color:#fff}
+.vcard .n{font-family:'Do Hyeon',sans-serif;font-size:32px;line-height:1}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+.step{min-height:52px;padding:8px 14px;border-radius:12px;border:2px solid var(--ink);background:#fff;color:var(--ink);font-weight:700;font-size:15px;display:flex;align-items:center;gap:10px;text-align:left}
+.step .num{width:28px;height:28px;flex:none;border-radius:999px;background:var(--ink);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:14px}
+.step .st{margin-left:auto;font-size:12px;font-weight:500;white-space:nowrap}
+.step.on{background:var(--ink);color:#fff}.step.on .num{background:#fff;color:var(--ink)}
+.navhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px 16px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--sub)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-2px;margin-right:3px}
+.navgroups{display:flex;flex-wrap:wrap;gap:10px 20px;margin-top:10px}
+.ng{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.ng>span{font-size:13px;font-weight:700;color:var(--sub);margin-right:2px}
+.qn{width:44px;height:44px;border-radius:10px;border:2px dashed var(--line);background:#fff;color:var(--ink);font-weight:700;font-size:15px}
+.qn.done{border:2px solid var(--ink);background:var(--ink);color:#fff}
+.qn.ok{border:2px solid var(--ok);background:var(--ok);color:#fff}
+.qn.bad{border:2px solid var(--bad);background:var(--bad);color:#fff}
+.qn.cur{outline:3px solid var(--focus);outline-offset:2px}
+.qcard{background:#fff;border:2px solid #D5DCD8;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:16px}
+.qcard.ok{border-color:var(--ok)}.qcard.bad{border-color:var(--bad)}
+.qtop{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.pill{font-size:13px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--ink);color:#fff}
+.scene{background:var(--warm);color:var(--warmink);border-radius:12px;padding:12px 14px;font-size:16px;line-height:1.65}
+.term{font-family:'Do Hyeon',sans-serif;font-size:34px;line-height:1.1}
+.qlist{display:flex;flex-direction:column;gap:14px}.qlist.p1{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))}
+.opts.two{grid-template-columns:1fr}
+.qq{margin:0;font-size:18px;font-weight:700;line-height:1.55}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.opt{min-height:56px;padding:10px 14px;border-radius:12px;border:2px solid var(--line);background:#fff;color:var(--ink);font-size:17px;font-weight:500;line-height:1.45;display:flex;align-items:center;gap:12px;text-align:left}
+.opt .d{width:30px;height:30px;flex:none;border-radius:999px;background:var(--ground);display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.opt .m{margin-left:auto;font-size:13px;font-weight:700;white-space:nowrap}
+.opt.on{background:var(--ink);border-color:var(--ink);color:#fff}.opt.on .d{background:#fff;color:var(--ink)}
+.opt.right{background:var(--okbg);border-color:var(--ok)}.opt.right .d{background:var(--ok);color:#fff}.opt.right .m{color:var(--ok)}
+.opt.wrong{background:var(--badbg);border-color:var(--bad)}.opt.wrong .d{background:var(--bad);color:#fff}.opt.wrong .m{color:var(--bad)}
+.opt.dim{border-color:#D5DCD8;color:var(--muted)}.opt.dim .d{background:var(--line);color:#fff}
+.qcard.part{border-color:#C9772E}
+.rubric{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--sub);background:#F6F8F7;border-radius:10px;padding:10px 14px}.rubric b{color:var(--ink)}
+textarea.essay{width:100%;font-size:16px;line-height:1.6;padding:10px 12px;border-radius:12px;border:2px solid var(--line);resize:vertical;color:var(--ink)}
+textarea.essay[readonly]{background:#F6F8F7}
+.count{font-size:13px;color:var(--muted);align-self:flex-end}
+label.qq{display:block}
+.why{margin:0;font-size:15px;line-height:1.65;background:var(--ground);border-radius:10px;padding:12px 14px}
+.qnav{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--soft)}
+.qnav button{min-height:48px;padding:8px 18px;border-radius:12px;border:2px solid var(--ink);background:#fff;color:var(--ink);font-weight:700;font-size:15px}
+.qnav button:disabled{border-color:#D5DCD8;color:var(--line)}
+.pool{background:#fff;border:2px dashed #C3CCC7;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.pool.hot{border-color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:10px;min-height:48px}
+.chip{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:6px 16px 6px 6px;border-radius:999px;border:2px solid var(--ink);background:#fff;color:var(--ink);font-weight:700;font-size:16px;cursor:grab;touch-action:manipulation}
+.chip .cn{width:28px;height:28px;border-radius:999px;background:var(--ink);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:13px}
+.chip.sel{background:var(--ink);color:#fff}.chip.sel .cn{background:#fff;color:var(--ink)}
+.bins{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.bin{border:2px solid;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:260px}
+.bin.hot{border-style:dashed}
+.bin .bl{font-family:'Do Hyeon',sans-serif;font-size:28px}.bin .bh{font-size:13px;color:var(--sub);line-height:1.5}
+.item{min-height:44px;border-radius:10px;border:2px solid var(--ink);background:#fff;color:var(--ink);font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 12px;text-align:left;cursor:grab}
+.item .m{font-size:12px;line-height:1.3;text-align:right}
+.item.sel{border-color:var(--focus);box-shadow:0 0 0 2px var(--focus) inset}
+.place{min-height:44px;border-radius:10px;border:2px dashed;background:transparent;font-size:14px;font-weight:700}
+.wline{margin:0;font-size:15px;line-height:1.6;background:#fff;border-radius:10px;padding:10px 14px}
+.banner{background:var(--ink);color:#fff;border-radius:16px;padding:22px;display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between}
+.banner .big{font-family:'Do Hyeon',sans-serif;font-size:60px;line-height:1}.banner .big span{font-size:24px;opacity:.75}
+.bar{height:12px;background:var(--soft);border-radius:999px;overflow:hidden}.bar i{display:block;height:100%;border-radius:999px}
+.wbtn{min-height:44px;padding:6px 14px;border-radius:999px;border:2px solid var(--bad);background:var(--badbg);color:#7A1A10;font-size:14px;font-weight:700}
+@media (max-width:520px){h1{font-size:34px}.term{font-size:38px}.banner .big{font-size:48px}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+// ▼ 선생님 점수 받는 웹 앱 주소 (구글 Apps Script 배포 후 아래 따옴표 안에 붙여넣기)
+const SHEET_URL = '여기에_웹앱_주소_붙여넣기';
+const QUIZ_NAME = '컴퓨팅 시스템과 운영체제';
+
+const DATA = {
+  parts: ['하드웨어·소프트웨어', '장치 분류', '스마트폰 속 컴퓨터', '요리로 이해하기', '운영체제 자원 관리'],
+  pts: [3, 3, 3, 3],
+  shortPts: 3,
+  p5: {
+    A: {
+      short: [
+        { q: '여러 프로그램이 CPU를 번갈아 쓰도록 순서와 시간을 정해 주는 일은 운영체제가 어떤 자원을 관리하는 것일까요? (○○ 관리)', keys: ['CPU', '씨피유', '중앙처리장치', '프로세서', '처리장치'], ans: 'CPU(프로세서) 관리', w: 'CPU는 한 번에 한 가지 일만 할 수 있어서, 운영체제가 여러 프로그램의 차례와 사용 시간을 정해 줘요.' },
+        { q: '실행 중인 프로그램에 기억 공간을 나눠 주고, 프로그램이 끝나면 그 공간을 돌려받는 일은 ○○○ 관리일까요?', keys: ['메모리', 'RAM', '램', '주기억', '기억장치'], ans: '메모리(주기억장치) 관리', w: '운영체제는 RAM을 프로그램마다 나눠 주고, 다 쓰면 거둬들여 다른 프로그램이 쓸 수 있게 해요.' },
+        { q: '여러 사람이 프린터 한 대에 동시에 인쇄를 보내면, 운영체제가 줄을 세워 하나씩 보내 줘요. 이것은 어떤 장치를 관리하는 일일까요? (○○○ 장치 관리)', keys: ['입출력', '주변', '출력장치', '프린터'], ans: '입출력 장치 관리', w: '키보드·프린터처럼 연결된 장치를 알아보고, 여러 프로그램이 겹치지 않게 차례로 쓰도록 관리해요.' }
+      ],
+      essay: [
+        { s: '햄버거 가게에 주방장(CPU)은 1명뿐인데 주문 3개가 한꺼번에 들어왔다.', q: '매니저(운영체제)가 어떻게 하면 손님 모두가 너무 오래 기다리지 않을지, 컴퓨터의 CPU 관리와 연결하여 서술하시오.',
+          rubric: [ { d: '주문(작업)의 순서를 정한다', kw: ['순서', '차례', '줄', '대기', '먼저'], pts: 3 }, { d: '시간을 나눠 조금씩 번갈아 처리한다', kw: ['번갈아', '나눠', '나누어', '교대', '돌아가', '조금씩', '시간'], pts: 3 }, { d: 'CPU·운영체제라는 용어로 연결한다', kw: ['CPU', '씨피유', '중앙처리', '프로세서', '운영체제'], pts: 2 } ],
+          model: '운영체제는 CPU를 쓰려는 프로그램들의 순서를 정하고, 짧은 시간씩 번갈아 CPU를 쓰게 한다. 매니저도 주문에 차례를 정하고 주방장이 조금씩 나눠 만들게 하면 모든 손님이 지나치게 오래 기다리지 않는다.' },
+        { q: '컴퓨터에 프로그램을 너무 많이 켜 두면 느려지는 까닭을 ‘메모리 관리’와 연결하여 쓰고, 해결 방법을 한 가지 쓰시오.',
+          rubric: [ { d: '메모리(RAM)를 언급한다', kw: ['메모리', 'RAM', '램', '주기억'], pts: 3 }, { d: '공간이 부족해진다고 설명한다', kw: ['부족', '가득', '모자', '꽉', '차서', '찼', '적어', '모자라'], pts: 2 }, { d: '해결 방법(안 쓰는 프로그램 끄기, RAM 늘리기 등)을 쓴다', kw: ['종료', '닫', '끄', '끈', '줄이', '늘리', '추가', '증설', '정리'], pts: 3 } ],
+          model: '실행 중인 프로그램은 모두 RAM에 올라가는데, 프로그램이 많으면 RAM 공간이 부족해져 운영체제가 메모리를 나눠 주기 어려워지고 느려진다. 쓰지 않는 프로그램을 종료하거나 RAM을 늘리면 해결할 수 있다.' }
+      ]
+    },
+    B: {
+      short: [
+        { q: '파일을 폴더로 정리하고, 저장 장치의 어느 곳에 저장할지 정해 주는 운영체제의 일은 ○○ 관리일까요?', keys: ['파일', '저장', '보조기억', '디스크'], ans: '파일(저장 장치) 관리', w: '운영체제는 SSD·하드디스크 같은 저장 장치에 파일을 어디에 둘지 정하고, 폴더로 정리해 쉽게 찾게 해 줘요.' },
+        { q: '운영체제가 관리하는 자원 가운데, 명령을 해석하고 계산하는 장치는 무엇일까요?', keys: ['CPU', '씨피유', '중앙처리장치', '프로세서', '처리장치'], ans: 'CPU(중앙 처리 장치)', w: 'CPU는 계산과 판단을 맡는 가장 중요한 자원이라 운영체제가 사용 순서를 관리해요.' },
+        { q: '키보드·마우스·프린터처럼 컴퓨터에 연결된 장치를 알아보고 쓸 수 있게 해 주는 운영체제의 일은 ○○○ 장치 관리일까요?', keys: ['입출력', '주변'], ans: '입출력 장치 관리', w: '운영체제는 연결된 장치를 알아보고(드라이버 이용), 프로그램이 장치를 쓸 수 있게 이어 줘요.' }
+      ],
+      essay: [
+        { s: '분식집 사장님은 ‘라면 먼저, 떡볶이는 다음’처럼 순서를 정하고, 조리대와 냄비를 직원에게 나눠 준다.', q: '사장님의 역할을 운영체제의 자원 관리와 연결하여 두 가지 이상 서술하시오.',
+          rubric: [ { d: '순서 정하기를 CPU(처리) 관리와 연결한다', kw: ['CPU', '씨피유', '프로세서', '처리장치', '중앙처리'], pts: 3 }, { d: '조리대·냄비 나눠 주기를 메모리나 장치 관리와 연결한다', kw: ['메모리', 'RAM', '램', '주기억', '장치', '입출력'], pts: 3 }, { d: '‘자원을 나눠 준다(배분한다)’는 뜻을 쓴다', kw: ['나눠', '나누', '배분', '할당', '분배', '자원'], pts: 2 } ],
+          model: '사장님이 주문 순서를 정하는 것은 운영체제가 CPU를 쓰는 순서를 정하는 CPU 관리와 같다. 조리대와 냄비를 직원에게 나눠 주는 것은 운영체제가 메모리와 장치를 프로그램에 할당하는 메모리·장치 관리와 같다.' },
+        { q: '운영체제가 없다면, 여러 앱이 같은 프린터나 메모리를 동시에 쓰려고 할 때 어떤 문제가 생길지 서술하시오.',
+          rubric: [ { d: '여러 앱이 동시에(순서 없이) 쓰려 한다는 상황을 쓴다', kw: ['동시', '한꺼번', '순서', '차례', '같이'], pts: 3 }, { d: '충돌·뒤섞임·오류 같은 문제를 쓴다', kw: ['충돌', '섞', '엉', '겹', '뒤죽', '꼬', '망가', '오류', '멈'], pts: 3 }, { d: '운영체제가 조정해 준다는 점을 쓴다', kw: ['운영체제', '관리', '조정', '정리', '차례'], pts: 2 } ],
+          model: '운영체제가 없으면 여러 앱이 순서 없이 동시에 프린터나 메모리를 쓰려고 해서 인쇄 내용이 뒤섞이거나 데이터가 겹쳐 오류가 난다. 운영체제가 차례를 정하고 자원을 나눠 주기 때문에 이런 충돌이 생기지 않는다.' }
+      ]
+    },
+    C: {
+      short: [
+        { q: '피자 가게의 오븐처럼, 컴퓨터에서 여러 프로그램이 나눠 써야 하는 CPU·메모리·장치를 통틀어 무엇이라고 할까요? (두 글자)', keys: ['자원'], ans: '자원', w: '운영체제는 CPU·메모리·저장 장치·입출력 장치 같은 자원을 관리해요.' },
+        { q: '전원이 꺼지면 내용이 사라지고, 운영체제가 실행 중인 프로그램마다 공간을 나눠 주는 기억 장치는 무엇일까요?', keys: ['RAM', '램', '주기억', '메모리'], ans: 'RAM(주기억장치)', w: 'RAM은 휘발성 기억장치라 전원이 꺼지면 내용이 지워져요.' },
+        { q: '운영체제가 여러 프로그램의 CPU 사용 순서와 시간을 정하는 일을 무엇이라고 할까요? (시간표처럼 일정을 짠다는 뜻, ○○○)', keys: ['스케줄링', '스케쥴링', '스케줄', '스케쥴'], ans: '스케줄링', w: 'CPU 스케줄링은 어떤 프로그램이 언제, 얼마 동안 CPU를 쓸지 정하는 일이에요.' }
+      ],
+      essay: [
+        { s: '가게 전원이 갑자기 꺼졌다. 조리대 위 반죽은 버려야 했지만, 냉동 창고의 도우는 그대로 남았다.', q: '이 상황을 주기억장치와 보조기억장치의 차이로 설명하고, 작업 중인 파일을 잃지 않으려면 어떻게 해야 하는지 쓰시오.',
+          rubric: [ { d: '주기억장치(RAM)의 내용은 전원이 꺼지면 사라진다', kw: ['사라', '지워', '없어', '날아', '휘발'], pts: 3 }, { d: '보조기억장치(SSD·하드디스크)에는 남는다', kw: ['보조', 'SSD', '하드', '남', '유지'], pts: 3 }, { d: '자주 저장(백업)해야 한다', kw: ['저장', '세이브', 'save', '백업', 'ctrl'], pts: 2 } ],
+          model: '조리대는 주기억장치(RAM)처럼 전원이 꺼지면 내용이 사라지고, 창고는 보조기억장치(SSD·하드디스크)처럼 전원이 꺼져도 내용이 남는다. 작업 중인 파일은 RAM에만 있으므로 자주 저장해 보조기억장치에 남겨 두어야 한다.' },
+        { s: '주문이 몰려 피자 굽는 주방장을 1명에서 2명으로 늘렸다.', q: '컴퓨터에서 CPU 코어가 늘어나면 운영체제의 CPU 관리가 어떻게 달라지는지 서술하시오.',
+          rubric: [ { d: '여러 작업을 동시에 처리할 수 있다', kw: ['동시', '함께', '같이', '나란히', '한꺼번', '병렬'], pts: 3 }, { d: '운영체제가 작업을 코어마다 나눠 맡긴다', kw: ['나눠', '나누', '배정', '맡', '할당', '분배'], pts: 3 }, { d: '더 빨라지거나 기다리는 시간이 줄어든다', kw: ['빠르', '빨리', '빨라', '속도', '기다리', '줄어'], pts: 2 } ],
+          model: '코어가 늘어나면 여러 프로그램을 동시에 처리할 수 있어서, 운영체제가 작업을 각 코어에 나눠 맡긴다. 그래서 작업이 기다리는 시간이 줄고 컴퓨터가 더 빨라진다.' }
+      ]
+    },
+    D: {
+      short: [
+        { q: '운영체제가 관리하는 자원은 CPU, 메모리, 저장 장치, 그리고 ○○○ 장치예요. 빈칸에 들어갈 말은?', keys: ['입출력', '주변'], ans: '입출력', w: '키보드·마우스·모니터·프린터 같은 입출력 장치도 운영체제가 관리하는 자원이에요.' },
+        { q: '컴퓨터에서 ‘실행 중인 프로그램’을 부르는 말은 무엇일까요? (프로○○)', keys: ['프로세스'], ans: '프로세스', w: '프로그램이 실행되어 CPU와 메모리를 쓰고 있는 상태를 프로세스라고 해요. 운영체제는 프로세스마다 자원을 나눠 줘요.' },
+        { q: '작업한 문서를 파일로 남겨 두는 곳으로, 운영체제가 폴더와 파일로 정리해 주는 장치는 무엇일까요?', keys: ['보조기억', 'SSD', '하드', '저장장치', '저장'], ans: '보조기억장치(저장 장치)', w: '운영체제는 SSD·하드디스크 같은 보조기억장치에 파일을 저장하고 폴더로 정리해요.' }
+      ],
+      essay: [
+        { s: '카페 매니저는 ① 주문 순서를 정하고, ② 두 직원이 같은 오븐을 동시에 쓰지 않게 조정하고, ③ 냉장고 칸을 메뉴마다 나눠 준다.', q: '매니저가 하는 세 가지 일을 운영체제의 자원 관리(CPU 관리, 입출력 장치 관리, 메모리 관리 등)와 짝지어 서술하시오.',
+          rubric: [ { d: '주문 순서 정하기 → CPU(처리) 관리', kw: ['CPU', '씨피유', '프로세서', '처리장치', '중앙처리'], pts: 3 }, { d: '오븐 조정하기 → 입출력 장치 관리', kw: ['입출력', '장치'], pts: 3 }, { d: '냉장고 칸 나누기 → 메모리(또는 저장 장치) 관리', kw: ['메모리', 'RAM', '램', '주기억', '저장'], pts: 2 } ],
+          model: '주문 순서를 정하는 것은 CPU를 쓰는 차례를 정하는 CPU 관리, 오븐을 겹치지 않게 쓰게 하는 것은 입출력 장치 관리, 냉장고 칸을 나눠 주는 것은 프로그램마다 기억 공간을 나눠 주는 메모리 관리와 같다.' },
+        { q: '스마트폰 운영체제가 배터리와 메모리를 관리하지 않는다면 어떤 불편이 생길지 두 가지 서술하시오.',
+          rubric: [ { d: '배터리가 빨리 닳는다', kw: ['배터리', '전원', '충전', '닳'], pts: 3 }, { d: '느려지거나 멈추거나 앱이 꺼진다', kw: ['느려', '느리', '멈', '꺼', '튕', '렉', '버벅', '안열', '안켜'], pts: 3 }, { d: '메모리(RAM)를 연결해 설명한다', kw: ['메모리', 'RAM', '램', '주기억'], pts: 2 } ],
+          model: '배터리를 관리하지 않으면 쓰지 않는 앱도 계속 전기를 써서 배터리가 빨리 닳는다. 메모리를 관리하지 않으면 RAM이 가득 차서 스마트폰이 느려지거나 앱이 멈추고 꺼진다.' }
+      ]
+    }
+  },
+  order: [3, 7, 0, 9, 5, 1, 8, 2, 6, 4],
+  hwWhy: '눈에 보이고 손으로 만질 수 있는 기계 장치는 하드웨어예요.',
+  swWhy: '컴퓨터에게 할 일을 알려 주는 프로그램은 소프트웨어예요.',
+  cats: [
+    { id: 'in', label: '입력', hint: '글자·소리·영상 같은 정보를 컴퓨터 안으로 넣어요', color: '#1E5A9C', tint: '#E4EEF8' },
+    { id: 'out', label: '출력', hint: '처리한 결과를 보여 주거나 들려줘요', color: '#A84B0C', tint: '#FBEADB' },
+    { id: 'proc', label: '처리', hint: '명령을 해석하고 계산해요', color: '#4A3A8F', tint: '#ECE9F7' },
+    { id: 'store', label: '저장', hint: '데이터와 프로그램을 기억하고 보관해요', color: '#0F6B5C', tint: '#E1F1EC' },
+    { id: 'net', label: '통신', hint: '다른 기기와 데이터를 주고받아요', color: '#8E2D5B', tint: '#F6E6EE' }
+  ],
+  versions: [
+    {
+      id: 'A', name: 'A형', theme: '햄버거 가게', desc: '키오스크 주문부터 버거가 나오기까지',
+      p1: [
+        { t: '키보드', a: 'H' },
+        { t: '윈도우(운영체제)', a: 'S', w: '하드웨어를 관리하는 운영체제도 프로그램이므로 소프트웨어예요.' },
+        { t: '그래픽카드', a: 'H', w: '화면을 그리는 계산을 맡는 부품이라 하드웨어예요.' },
+        { t: '한글(워드프로세서)', a: 'S' },
+        { t: '하드디스크', a: 'H' }
+      ],
+      p2: [
+        { t: '키보드', a: 'in' }, { t: '모니터', a: 'out' }, { t: 'CPU(중앙 처리 장치)', a: 'proc' }, { t: 'SSD', a: 'store' }, { t: '공유기', a: 'net' },
+        { t: '마이크', a: 'in' }, { t: '프린터', a: 'out' }, { t: 'GPU(그래픽 처리 장치)', a: 'proc', w: '그래픽 계산을 빠르게 처리하는 처리 장치예요.' }, { t: 'USB 메모리', a: 'store' }, { t: '랜카드', a: 'net' }
+      ],
+      p3: [
+        { q: '스마트폰의 두뇌인 ‘AP(애플리케이션 프로세서)’는 컴퓨터의 어떤 장치와 같은 역할을 할까요?', o: ['처리 장치(CPU)', '보조기억장치', '출력 장치', '통신 장치'], a: 0, w: 'AP는 명령을 해석하고 계산하는 칩으로, 컴퓨터의 CPU에 해당해요.' },
+        { q: '사진과 앱을 보관하는 ‘내장 저장 공간(128GB)’은 컴퓨터의 무엇과 같을까요?', o: ['주기억장치(RAM)', '보조기억장치(SSD)', '처리 장치(CPU)', '입력 장치'], a: 1, w: '전원을 꺼도 사진과 앱이 남아 있어요. 컴퓨터의 SSD·하드디스크 같은 보조기억장치예요.' },
+        { q: '스마트폰 ‘카메라’는 어떤 장치일까요?', o: ['출력 장치', '입력 장치', '저장 장치', '통신 장치'], a: 1, w: '빛(영상)을 받아 디지털 정보로 바꿔 넣어 주므로 입력 장치예요.' },
+        { q: '인터넷에 연결해 주는 ‘LTE·5G 통신 칩’은 컴퓨터의 무엇과 같을까요?', o: ['통신 장치(랜카드·공유기)', '출력 장치(모니터)', '처리 장치(CPU)', '주기억장치(RAM)'], a: 0, w: '다른 기기·인터넷과 데이터를 주고받는 통신 장치예요.' },
+        { q: '스마트폰의 ‘안드로이드’나 ‘iOS’는 컴퓨터의 무엇과 같은 역할을 할까요?', o: ['응용 프로그램(앱)', '운영체제(윈도우 등)', '하드웨어 부품', '입력 장치'], a: 1, w: '하드웨어를 관리하고 앱이 실행되도록 돕는 운영체제예요. 컴퓨터의 윈도우·macOS와 같아요.' }
+      ],
+      p4: [
+        { s: '손님이 키오스크 화면에서 ‘치즈버거 1개’를 누른다.', q: '이 단계는 컴퓨터의 어떤 과정과 같을까요?', o: ['입력', '처리', '출력', '저장'], a: 0, w: '주문(정보)이 가게 안으로 들어오는 단계이므로 입력이에요.' },
+        { s: '주방장이 패티를 굽고 빵 위에 치즈와 채소를 차례로 쌓는다.', q: '주방장이 하는 일은 컴퓨터의 무엇과 같을까요?', o: ['입력 장치', '처리 장치(CPU)', '통신 장치', '보조기억장치'], a: 1, w: '들어온 주문을 실제로 만들어 내는 주방장은 계산하고 처리하는 CPU와 같아요.' },
+        { s: '주방장은 지금 만드는 버거의 재료만 꺼내 ‘조리대’ 위에 잠깐 올려 둔다.', q: '조리대는 컴퓨터의 무엇과 비슷할까요?', o: ['보조기억장치', '주기억장치(RAM)', '출력 장치', '통신 장치'], a: 1, w: '지금 작업 중인 재료(데이터)를 잠시 올려 두는 곳이 RAM이에요. 조리대가 넓을수록 여러 버거를 동시에 만들 수 있어요.' },
+        { s: '쓰고 남은 패티와 빵은 ‘냉동 창고’에 넣어 오래 보관한다.', q: '냉동 창고는 컴퓨터의 무엇과 같을까요?', o: ['주기억장치(RAM)', '처리 장치(CPU)', '보조기억장치', '입력 장치'], a: 2, w: '많은 재료를 오래 보관하는 창고는 SSD·하드디스크 같은 보조기억장치와 같아요.' },
+        { s: '매니저가 주문 순서를 정하고, 어느 주방장이 어떤 조리대를 쓸지 배정한다.', q: '매니저는 컴퓨터의 무엇과 같은 역할일까요?', o: ['응용 프로그램', '운영체제', '출력 장치', '입력 장치'], a: 1, w: '작업 순서를 정하고 CPU·메모리 같은 자원을 나눠 주는 관리자가 운영체제예요.' }
+      ]
+    },
+    {
+      id: 'B', name: 'B형', theme: '분식집 떡볶이', desc: '레시피 카드와 배달 주문이 오가는 분식집',
+      p1: [
+        { t: '마우스', a: 'H' },
+        { t: '안드로이드', a: 'S', w: '스마트폰 운영체제도 프로그램이므로 소프트웨어예요.' },
+        { t: '크롬(웹 브라우저)', a: 'S' },
+        { t: 'RAM(메모리)', a: 'H', w: '실행 중인 데이터를 잠시 기억하는 부품이라 하드웨어예요.' },
+        { t: '카카오톡 앱', a: 'S' }
+      ],
+      p2: [
+        { t: '마우스', a: 'in' }, { t: '스피커', a: 'out' }, { t: 'CPU(중앙 처리 장치)', a: 'proc' }, { t: '하드디스크(HDD)', a: 'store' }, { t: '모뎀', a: 'net' },
+        { t: '웹캠', a: 'in' }, { t: '빔 프로젝터', a: 'out' }, { t: 'NPU(AI 처리 장치)', a: 'proc', w: '인공지능 계산을 빠르게 처리하는 처리 장치예요.' }, { t: 'RAM(주기억장치)', a: 'store', w: '주기억장치도 데이터를 기억하는 저장(기억) 장치예요.' }, { t: '블루투스 모듈', a: 'net' }
+      ],
+      p3: [
+        { q: 'RAM이 큰 스마트폰은 여러 앱을 동시에 띄워 둬도 덜 느려져요. 스마트폰의 RAM은 컴퓨터의 무엇과 같을까요?', o: ['보조기억장치', '주기억장치', '통신 장치', '출력 장치'], a: 1, w: 'RAM은 지금 실행 중인 앱과 데이터를 잠시 올려 두는 주기억장치예요.' },
+        { q: '스마트폰 ‘스피커’는 컴퓨터의 어떤 장치와 같을까요?', o: ['입력 장치', '처리 장치', '출력 장치', '저장 장치'], a: 2, w: '처리한 결과를 소리로 들려주므로 출력 장치예요.' },
+        { q: '잠금을 푸는 ‘지문 인식 센서’는 어떤 장치일까요?', o: ['입력 장치', '출력 장치', '통신 장치', '주기억장치'], a: 0, w: '손가락 지문 정보를 읽어 들이므로 입력 장치예요.' },
+        { q: '스마트폰의 ‘와이파이(Wi-Fi) 칩’은 컴퓨터의 무엇과 같을까요?', o: ['보조기억장치', '통신 장치(무선 랜카드)', '처리 장치(CPU)', '출력 장치'], a: 1, w: '무선으로 인터넷과 데이터를 주고받는 통신 장치예요.' },
+        { q: '앱이 실행될 때 메모리를 나눠 주고, 배터리와 화면 밝기를 관리하는 것은 무엇일까요?', o: ['카메라 앱', '운영체제', 'AP(프로세서)', '내장 저장 공간'], a: 1, w: '하드웨어 자원을 관리하고 앱에 나눠 주는 것이 운영체제의 역할이에요.' }
+      ],
+      p4: [
+        { s: '벽에 붙은 ‘레시피 카드’에 떡볶이 만드는 순서가 차례대로 적혀 있다.', q: '레시피 카드는 컴퓨터의 무엇과 같을까요?', o: ['하드웨어', '프로그램(소프트웨어)', '출력 장치', '통신 장치'], a: 1, w: '해야 할 일을 순서대로 적은 명령의 모음이 프로그램이에요.' },
+        { s: '배달 앱으로 들어온 주문이 인터넷을 거쳐 가게 태블릿에 전달된다.', q: '주문이 전달되는 과정은 무엇과 같을까요?', o: ['통신', '출력', '처리', '주기억장치'], a: 0, w: '떨어진 곳끼리 데이터를 주고받는 것이 통신이에요.' },
+        { s: '완성된 떡볶이를 그릇에 담아 손님에게 내준다.', q: '이 단계는 컴퓨터의 어떤 과정일까요?', o: ['입력', '저장', '출력', '처리'], a: 2, w: '처리한 결과를 밖으로 내보내는 단계이므로 출력이에요.' },
+        { s: '사장님이 ‘라면 먼저, 떡볶이는 다음’처럼 주문 순서를 정하고 직원에게 일을 나눠 준다.', q: '사장님의 역할은 컴퓨터의 무엇과 같을까요?', o: ['운영체제', '보조기억장치', '입력 장치', '레시피(프로그램)'], a: 0, w: '여러 작업의 순서를 정하고 일을 나눠 주는 것은 운영체제의 역할이에요.' },
+        { s: '조리대가 좁아서 한 번에 두 가지 음식밖에 못 만든다.', q: '컴퓨터에서 어떤 부품이 부족한 상황과 비슷할까요?', o: ['스피커', '주기억장치(RAM)', '키보드', '모니터'], a: 1, w: '동시에 작업할 공간이 부족한 것은 RAM이 부족한 상황과 같아요.' }
+      ]
+    },
+    {
+      id: 'C', name: 'C형', theme: '피자 가게', desc: '오븐과 창고, 주방장이 바쁜 피자 가게',
+      p1: [
+        { t: '메인보드', a: 'H', w: '여러 부품을 연결하는 기판이라 하드웨어예요.' },
+        { t: '리눅스', a: 'S', w: '리눅스는 운영체제이고, 운영체제는 소프트웨어예요.' },
+        { t: '백신 프로그램', a: 'S' },
+        { t: '웹캠', a: 'H' },
+        { t: '프린터 드라이버', a: 'S', w: '이름에 ‘프린터’가 있지만, 컴퓨터가 프린터를 다루게 해 주는 프로그램이라 소프트웨어예요.' }
+      ],
+      p2: [
+        { t: '스캐너', a: 'in' }, { t: '헤드폰', a: 'out' }, { t: 'CPU(중앙 처리 장치)', a: 'proc' }, { t: 'SD 메모리 카드', a: 'store' }, { t: '무선 랜카드', a: 'net' },
+        { t: '조이스틱', a: 'in' }, { t: '3D 프린터', a: 'out', w: '결과물을 입체로 만들어 내는 출력 장치예요.' }, { t: 'GPU(그래픽 처리 장치)', a: 'proc' }, { t: '외장 하드', a: 'store' }, { t: '공유기', a: 'net' }
+      ],
+      p3: [
+        { q: '스마트폰 ‘터치스크린’은 화면을 보여 주면서 손가락 터치도 받아요. 어떤 장치일까요?', o: ['입력 장치만', '출력 장치만', '입력과 출력을 모두 하는 장치', '저장 장치'], a: 2, w: '화면 표시(출력)와 터치 감지(입력)를 함께 하는 입출력 장치예요.' },
+        { q: '음성 메시지를 녹음하는 ‘마이크’는 어떤 장치일까요?', o: ['출력 장치', '입력 장치', '처리 장치', '통신 장치'], a: 1, w: '소리를 디지털 정보로 바꿔 넣으므로 입력 장치예요.' },
+        { q: '알림이 오면 몸체를 떨게 하는 ‘진동 모터’는 어떤 장치일까요?', o: ['입력 장치', '저장 장치', '출력 장치', '통신 장치'], a: 2, w: '사용자에게 정보를 진동으로 알려 주므로 출력 장치예요.' },
+        { q: '무선 이어폰과 연결하는 ‘블루투스’는 컴퓨터의 무엇과 같을까요?', o: ['통신 장치', '주기억장치', '처리 장치', '운영체제'], a: 0, w: '가까운 기기와 무선으로 데이터를 주고받는 통신 장치예요.' },
+        { q: '스마트폰에 꽂는 ‘SD 카드’는 컴퓨터의 무엇과 같을까요?', o: ['주기억장치(RAM)', '처리 장치(CPU)', '보조기억장치(USB 메모리)', '출력 장치'], a: 2, w: '전원이 꺼져도 사진·파일이 남는 보조기억장치예요.' }
+      ],
+      p4: [
+        { s: '점원이 손님의 주문을 듣고 ‘페퍼로니 피자 라지’를 주문 단말기에 입력한다.', q: '이 단계는 컴퓨터의 어떤 과정일까요?', o: ['입력', '출력', '처리', '저장'], a: 0, w: '주문 정보를 가게(컴퓨터) 안으로 넣는 단계이므로 입력이에요.' },
+        { s: '도우에 토핑을 올리고 오븐에 넣어 굽는다.', q: '이 단계는 컴퓨터의 어떤 과정일까요?', o: ['저장', '처리', '입력', '출력'], a: 1, w: '재료(데이터)를 가공해 결과를 만들어 내는 단계이므로 처리예요.' },
+        { s: '가게 전원이 갑자기 꺼졌다. 조리대 위 반죽은 버려야 했지만, 냉동 창고의 도우는 그대로 남았다.', q: '전원이 꺼지면 내용이 사라지는 ‘조리대’는 컴퓨터의 무엇과 같을까요?', o: ['보조기억장치', '주기억장치(RAM)', '통신 장치', '입력 장치'], a: 1, w: 'RAM은 전원이 꺼지면 내용이 지워져요. 창고처럼 그대로 남는 것은 보조기억장치예요.' },
+        { s: '주문이 몰려 피자 굽는 주방장을 1명에서 2명으로 늘렸더니 더 빨리 만들 수 있었다.', q: '컴퓨터에서는 무엇을 늘린 것과 비슷할까요?', o: ['모니터 크기', 'CPU 코어 수', 'USB 메모리 개수', '스피커 개수'], a: 1, w: '처리 담당이 늘어난 것이므로 CPU 코어(듀얼·쿼드 코어)가 많아진 것과 같아요.' },
+        { s: '매니저가 ‘배달 주문 먼저, 포장은 다음’으로 순서를 정하고, 오븐을 누가 쓸지 조정한다.', q: '매니저는 컴퓨터의 무엇과 같은 역할일까요?', o: ['운영체제', '출력 장치', '보조기억장치', '입력 장치'], a: 0, w: '작업 순서와 자원 사용을 조정하는 것이 운영체제의 역할이에요.' }
+      ]
+    },
+    {
+      id: 'D', name: 'D형', theme: '샌드위치 카페', desc: '진동벨과 본사 레시피가 있는 카페',
+      p1: [
+        { t: '터치스크린', a: 'H', w: '화면을 보여 주고 터치를 받는 부품이라 하드웨어예요.' },
+        { t: 'iOS', a: 'S', w: 'iOS는 아이폰의 운영체제이고, 운영체제는 소프트웨어예요.' },
+        { t: '동영상 편집 프로그램', a: 'S' },
+        { t: '전원 공급 장치', a: 'H' },
+        { t: '스크래치', a: 'S', w: '블록으로 프로그램을 만드는 프로그램이라 소프트웨어예요.' }
+      ],
+      p2: [
+        { t: '터치패드', a: 'in' }, { t: '모니터', a: 'out' }, { t: 'AP(스마트폰 프로세서)', a: 'proc', w: '스마트폰에서 CPU 역할을 하는 처리 장치예요.' }, { t: 'SSD', a: 'store' }, { t: '블루투스 동글', a: 'net' },
+        { t: '바코드 리더기', a: 'in' }, { t: '스피커', a: 'out' }, { t: 'CPU(중앙 처리 장치)', a: 'proc' }, { t: 'USB 메모리', a: 'store' }, { t: 'LAN 카드', a: 'net' }
+      ],
+      p3: [
+        { q: '컴퓨터의 CPU와 같은 역할을 하는 스마트폰 부품은 무엇일까요?', o: ['배터리', 'AP(애플리케이션 프로세서)', 'SIM 카드', '카메라'], a: 1, w: 'AP는 스마트폰에서 명령을 해석하고 계산하는 처리 장치예요.' },
+        { q: '앱을 많이 켜 두면 스마트폰이 느려져요. 어떤 부품의 공간이 부족해서일까요?', o: ['RAM(주기억장치)', '스피커', '카메라', '충전 단자'], a: 0, w: '실행 중인 앱은 RAM에 올라가요. RAM이 가득 차면 느려져요.' },
+        { q: '‘저장 공간이 부족합니다’ 알림이 떴어요. 어떤 장치의 공간이 부족한 걸까요?', o: ['처리 장치', '보조기억장치(내장 저장 공간)', '입력 장치', '통신 장치'], a: 1, w: '사진·앱·파일을 보관하는 보조기억장치가 가득 찬 거예요.' },
+        { q: '주변 밝기를 감지해 화면 밝기를 바꾸는 ‘조도 센서’는 어떤 장치일까요?', o: ['출력 장치', '입력 장치', '저장 장치', '운영체제'], a: 1, w: '주변의 빛 정보를 읽어 들이므로 입력 장치예요.' },
+        { q: '컴퓨터의 ‘윈도우’와 같은 역할을 하는 스마트폰 소프트웨어는 무엇일까요?', o: ['유튜브 앱', '안드로이드·iOS', '카카오톡 앱', '사진 갤러리 앱'], a: 1, w: '안드로이드와 iOS는 스마트폰의 운영체제예요. 나머지는 운영체제 위에서 돌아가는 앱이에요.' }
+      ],
+      p4: [
+        { s: '샌드위치가 완성되자 손님이 가진 진동벨이 울린다.', q: '진동벨이 울리는 것은 컴퓨터의 어떤 과정일까요?', o: ['입력', '출력', '처리', '저장'], a: 1, w: '처리가 끝난 결과를 사용자에게 알려 주는 것이므로 출력이에요.' },
+        { s: '본사 서버에서 새 메뉴 레시피를 인터넷으로 내려받는다.', q: '이 과정은 컴퓨터의 무엇과 같을까요?', o: ['통신', '입력 장치', '처리', '출력'], a: 0, w: '멀리 떨어진 서버와 데이터를 주고받으므로 통신이에요.' },
+        { s: '카페에는 레시피 책이 있고, 직원·칼·오븐·냉장고가 있다.', q: '레시피 책이 소프트웨어라면, 직원·칼·오븐·냉장고는 무엇에 해당할까요?', o: ['소프트웨어', '하드웨어', '운영체제', '프로그램'], a: 1, w: '실제로 일을 하는 눈에 보이는 몸체와 장비는 하드웨어예요.' },
+        { s: '매니저가 두 직원이 같은 오븐을 동시에 쓰지 않도록 순서를 정하고, 쉬는 직원 대신 다른 직원을 배치한다.', q: '매니저는 컴퓨터의 무엇과 같은 역할일까요?', o: ['운영체제', '입력 장치', '보조기억장치', '응용 프로그램'], a: 0, w: '자원이 겹치지 않게 조정하고 일을 배분하는 것이 운영체제의 역할이에요.' },
+        { s: '주문 받기 → 재료 손질하고 조립하기 → 손님에게 내주기', q: '카페의 일 처리 순서를 컴퓨터의 동작 순서로 바르게 나타낸 것은?', o: ['출력 → 처리 → 입력', '입력 → 처리 → 출력', '처리 → 입력 → 출력', '입력 → 출력 → 처리'], a: 1, w: '컴퓨터는 입력 → 처리 → 출력 순서로 일해요. 필요하면 중간에 저장도 해요.' }
+      ]
+    }
+  ]
+};
+
+const MARKS = ['①', '②', '③', '④'];
+const BAR = ['#1E5A9C', '#4A3A8F', '#0F6B5C', '#A84B0C', '#8E2D5B'];
+const NP = 5, PS = [0, 1, 2, 3, 4];
+const fresh = () => ({ part: 0, ans: [{}, {}, {}, {}, {}], graded: [false, false, false, false, false], sel: -1, sent: '' });
+const S = Object.assign({ screen: 'start', sid: '', name: '', ver: '', msg: '' }, fresh());
+let dragI = -1;
+const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ver = () => DATA.versions.find((x) => x.id === S.ver) || null;
+// ── 단답형·서술형 채점 도구 ──
+const norm = (t) => String(t || '').toLowerCase().replace(/[\s.,·!?~()\[\]'"‘’“”\-–—:;\/]/g, '');
+const p5Of = (v) => DATA.p5[v.id];
+const shortOk = (sq, val) => { const a = norm(val); if (!a || a.length > 20) return false; return sq.keys.some((k) => a.includes(norm(k))); };
+const essayEval = (e, val) => { const a = norm(val); const hits = e.rubric.map((r) => a.length >= 5 && r.kw.some((k) => a.includes(norm(k)))); let sc = 0; hits.forEach((h, j) => { if (h) sc += e.rubric[j].pts; }); return { hits, score: sc, max: e.rubric.reduce((b, r) => b + r.pts, 0) }; };
+const filled5 = (v, i, val) => { const t = String(val || '').trim(); return i < p5Of(v).short.length ? t.length > 0 : t.length >= 10; };
+const qs = (v, p) => p === 0 ? v.p1.map((x) => ({ term: x.t, q: '하드웨어일까요, 소프트웨어일까요?', o: ['하드웨어', '소프트웨어'], a: x.a === 'H' ? 0 : 1, w: x.w || (x.a === 'H' ? DATA.hwWhy : DATA.swWhy) })) : p === 2 ? v.p3 : p === 3 ? v.p4 : null;
+const size = (v, p) => [v.p1.length, v.p2.length, v.p3.length, v.p4.length, p5Of(v).short.length + p5Of(v).essay.length][p];
+const ok = (v, p, i) => {
+  if (p === 4) { const x = p5Of(v), ns = x.short.length; if (i < ns) return shortOk(x.short[i], S.ans[4][i]); const r = essayEval(x.essay[i - ns], S.ans[4][i]); return r.score === r.max; }
+  return p === 1 ? S.ans[1][i] === v.p2[i].a : S.ans[p][i] === qs(v, p)[i].a;
+};
+const cnt = (p) => p === 4 ? Object.keys(S.ans[4]).filter((i) => filled5(ver(), +i, S.ans[4][i])).length : Object.keys(S.ans[p]).length;
+const maxOf = (v, p) => p === 4 ? p5Of(v).short.length * DATA.shortPts + p5Of(v).essay.reduce((b, e) => b + essayEval(e, '').max, 0) : size(v, p) * DATA.pts[p];
+const score = (v, p) => {
+  if (p === 4) { const x = p5Of(v), ns = x.short.length; let t = 0; x.short.forEach((q, i) => { if (shortOk(q, S.ans[4][i])) t += DATA.shortPts; }); x.essay.forEach((e, j) => { t += essayEval(e, S.ans[4][ns + j]).score; }); return t; }
+  let c = 0; for (let i = 0; i < size(v, p); i++) if (ok(v, p, i)) c++; return c * DATA.pts[p];
+};
+const cat = (id) => DATA.cats.find((c) => c.id === id);
+function set(o, scroll) { Object.assign(S, o); render(); if (scroll) window.scrollTo(0, 0); }
+function setAns(p, i, val) { if (val === null) delete S.ans[p][i]; else S.ans[p][i] = val; dragI = -1; set({ sel: -1 }); }
+
+function vStart() {
+  return `<header><div style="flex:1 1 420px;min-width:0"><div class="kick">중학교 정보 · 컴퓨팅 시스템 · 운영체제</div><h1 class="disp">컴퓨터는 어떻게 일할까?</h1><p class="lead">하드웨어와 소프트웨어, 다섯 가지 장치, 스마트폰 속 부품, 가게에서 음식을 만드는 과정으로 컴퓨터의 동작 원리를 확인해요.</p></div></header>
+  <div class="panel" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px">
+   <div><label for="sid" style="font-size:15px;font-weight:700;display:block;margin-bottom:6px">학번</label><input class="t" id="sid" inputmode="numeric" autocomplete="off" placeholder="예: 10315" value="${esc(S.sid)}"></div>
+   <div><label for="sname" style="font-size:15px;font-weight:700;display:block;margin-bottom:6px">이름</label><input class="t" id="sname" autocomplete="off" placeholder="예: 김다산" value="${esc(S.name)}"></div></div>
+  <div class="navhead"><h2 class="disp" style="font-size:26px">풀 유형 고르기</h2><button class="btn ghost" data-act="random" style="min-height:44px;font-size:15px">무작위로 고르기</button></div>
+  <div class="vgrid">${DATA.versions.map((x) => `<button class="vcard ${x.id === S.ver ? 'on' : ''}" data-act="ver" data-v="${x.id}" aria-pressed="${x.id === S.ver}"><span class="n">${x.name}</span><b style="font-size:17px">${x.theme}</b><span style="font-size:14px;line-height:1.5;opacity:.85">${x.desc}</span></button>`).join('')}</div>
+  <div class="rule"><b>점수 규칙</b><span>1~4단계 문항·카드 1개당 3점</span><span>1단계 15점 · 2단계 30점 · 3단계 15점 · 4단계 15점 · 5단계 25점(단답 9점 + 서술형 16점)</span><span>서술형은 키워드로 가채점하고 선생님이 최종 확인해요</span><span>만점 100점</span><span>단계마다 채점하고, 마지막에 최종 점수를 선생님께 보내요</span></div>
+  <div class="row-end">${S.msg ? `<span class="alert grow" role="alert">${esc(S.msg)}</span>` : ''}<button class="btn" data-act="begin" style="font-size:17px">퀴즈 시작 →</button></div>`;
+}
+
+function vHeader(v, sizes, sum) {
+  const tiles = PS.map((p) => `<div class="tile"><small>${p + 1}단계</small><b>${S.graded[p] ? score(v, p) : '–'}<span> /${maxOf(v, p)}</span></b></div>`).join('') + `<div class="tile dark"><small>합계</small><b>${sum}<span> /100</span></b></div>`;
+  return `<header><div style="flex:1 1 420px;min-width:0"><div class="kick">중학교 정보 · 컴퓨팅 시스템 · 운영체제</div><h1 class="disp">컴퓨터는 어떻게 일할까?</h1><p class="lead"><b style="color:var(--ink)">${esc(S.sid + ' ' + S.name)} · ${v.name} ${v.theme}</b> · 아래 단계 버튼을 눌러 어느 단계로든 옮겨 갈 수 있어요.</p></div><div class="tiles">${tiles}</div></header>`;
+}
+
+function vSteps(v, sizes, labels, all) {
+  return `<nav class="steps" aria-label="활동 단계">${labels.concat(['최종 제출']).map((l, i) => {
+    const st = i < NP ? (S.graded[i] ? '채점 완료' : cnt(i) + '/' + sizes[i]) : (S.sent === 'ok' ? '제출 완료' : all ? '제출 가능' : '');
+    return `<button class="step ${S.part === i ? 'on' : ''}" data-act="part" data-p="${i}" aria-current="${S.part === i ? 'step' : 'false'}"><span class="num">${i + 1}</span><span>${l}</span><span class="st">${st}</span></button>`;
+  }).join('')}</nav>`;
+}
+
+function vOne(v, offs) {
+  const P = S.part, list = qs(v, P), g = S.graded[P];
+  const title = P === 0 ? '1. 하드웨어일까, 소프트웨어일까?' : P === 2 ? '3. 스마트폰 속 컴퓨터 부품' : '4. ' + v.theme + '에서 배우는 컴퓨터 동작 원리';
+  const desc = P === 0 ? '눈에 보이고 만질 수 있는 기계 장치는 하드웨어, 컴퓨터에게 할 일을 알려 주는 프로그램은 소프트웨어예요.' : P === 2 ? '스마트폰 부품이 컴퓨터의 어떤 장치와 같은 역할을 하는지 골라 보세요.' : '가게에서 일어나는 일을 컴퓨터의 동작과 연결해 보세요.';
+  const cards = list.map((q, i) => {
+    const ch = S.ans[P][i], good = g && ch === q.a;
+    const opts = q.o.map((t, oi) => {
+      const on = ch === oi; let cls = '', m = '';
+      if (!g) cls = on ? 'on' : '';
+      else if (oi === q.a) { cls = 'right'; m = on ? '✓ 내 답 · 정답' : '✓ 정답'; }
+      else if (on) { cls = 'wrong'; m = '✗ 내 답'; }
+      else cls = 'dim';
+      return `<button class="opt ${cls}" data-act="pick" data-i="${i}" data-o="${oi}" aria-pressed="${on}" ${g ? 'aria-disabled="true"' : ''}><span class="d">${MARKS[oi]}</span><span>${t}</span><span class="m">${m}</span></button>`;
+    }).join('');
+    return `<article class="qcard ${g ? (good ? 'ok' : 'bad') : ''}" id="q-${P}-${i}"><div class="qtop"><span class="pill">${offs[P] + i + 1}번</span>${g ? (good ? '<b style="color:var(--ok)">✓ 정답 +3</b>' : '<b style="color:var(--bad)">✗ 다시 보기</b>') : ''}</div>
+    ${q.s ? `<div class="scene"><b>상황</b> · ${q.s}</div>` : ''}${q.term ? `<div class="term">${q.term}</div>` : ''}<p class="qq">${q.q}</p><div class="opts ${P === 0 ? 'two' : ''}">${opts}</div>
+    ${g ? `<p class="why"><b>정답: ${q.o[q.a]}</b> · ${q.w}</p>` : ''}</article>`;
+  }).join('');
+  return `<section style="display:flex;flex-direction:column;gap:18px"><div><h2 class="disp">${title}</h2><p class="lead" style="font-size:15px;margin-top:4px">${desc}</p></div><div class="qlist ${P === 0 ? 'p1' : ''}">${cards}</div></section>`;
+}
+
+function vP2(v, offs) {
+  const g = S.graded[1], hot = !g && (S.sel >= 0 || dragI >= 0);
+  const num = (i) => offs[1] + DATA.order.indexOf(i) + 1;
+  const pool = DATA.order.filter((i) => S.ans[1][i] === undefined);
+  const bins = DATA.cats.map((c) => {
+    const items = DATA.order.filter((i) => S.ans[1][i] === c.id).map((i) => {
+      let m = '', col = '', bd = '';
+      if (g) { if (v.p2[i].a === c.id) { m = '✓ +3'; col = 'var(--ok)'; bd = 'var(--ok)'; } else { m = '✗ 정답: ' + cat(v.p2[i].a).label; col = 'var(--bad)'; bd = 'var(--bad)'; } }
+      return `<button class="item ${S.sel === i ? 'sel' : ''}" ${g ? '' : 'draggable="true"'} data-act="unplace" data-i="${i}" style="${bd ? 'border-color:' + bd + ';cursor:default' : ''}" aria-label="${v.p2[i].t}${g ? '' : ' 카드 빼기'}"><span>${num(i)}. ${v.p2[i].t}</span><span class="m" style="color:${col}">${m}</span></button>`;
+    }).join('');
+    return `<div class="bin ${hot ? 'hot' : ''}" data-drop="${c.id}" style="background:${c.tint};border-color:${c.color}"><div><div class="bl" style="color:${c.color}">${c.label}</div><div class="bh">${c.hint}</div></div><div style="display:flex;flex-direction:column;gap:8px">${items}${g ? '' : `<button class="place" data-act="place" data-c="${c.id}" style="border-color:${c.color};color:${c.color}">${S.sel >= 0 ? '여기에 「' + v.p2[S.sel].t + '」 놓기' : '여기로 끌어 오세요'}</button>`}</div></div>`;
+  }).join('');
+  const wrong = g ? DATA.order.filter((i) => !ok(v, 1, i)).map((i) => { const c = cat(v.p2[i].a); return `<p class="wline"><b style="color:var(--bad)">${num(i)}번 ${v.p2[i].t}</b> → 정답은 <b>${c.label} 장치</b> · ${v.p2[i].w || c.hint + '.'}</p>`; }).join('') : '';
+  return `<section style="display:flex;flex-direction:column;gap:18px"><div class="pool ${hot ? 'hot' : ''}" data-drop="" id="p2top"><div class="navhead"><h2 class="disp" style="font-size:26px">2. 이 장치는 어느 칸일까?</h2><span style="font-size:14px;color:var(--muted)">남은 카드 ${pool.length}장 · 끌기가 어려우면 카드를 한 번 누르고 칸의 ‘여기에 놓기’를 누르세요</span></div>
+  <div class="chips">${pool.map((i) => `<button class="chip ${S.sel === i ? 'sel' : ''}" ${g ? '' : 'draggable="true"'} data-act="chip" data-i="${i}" aria-pressed="${S.sel === i}"><span class="cn">${num(i)}</span>${v.p2[i].t}</button>`).join('')}${pool.length ? '' : '<span style="font-size:15px;color:var(--muted);align-self:center">카드를 모두 분류했어요. 아래에서 채점해 보세요.</span>'}</div></div>
+  <div class="bins">${bins}</div>${wrong ? `<div style="display:flex;flex-direction:column;gap:8px">${wrong}</div>` : ''}</section>`;
+}
+
+function gradeBarHtml(v, sizes) {
+  const P = S.part, c = cnt(P), sz = sizes[P], g = S.graded[P], sc = score(v, P), mx = maxOf(v, P);
+  let h = '';
+  if (g) h += `<span class="grow">${P + 1}단계 ${P === 4 ? '가채점 ' : ''}${sc} / ${mx}점${P === 4 ? ' — 서술형은 선생님이 답안을 읽고 최종 점수를 정해요.' : sc < mx ? ' — 빨간 테두리 문제의 정답과 설명을 확인해 보세요.' : ' — 모두 맞혔어요!'}</span><button class="btn" data-act="part" data-p="${P + 1}">${P < NP - 1 ? (P + 2) + '단계로 →' : '최종 제출로 →'}</button>`;
+  else if (c < sz) h += `<button class="btn" disabled>${P === 1 ? (sz - c) + '장 더 놓으면 채점할 수 있어요' : P === 4 ? (sz - c) + '문제 더 쓰면 채점할 수 있어요 (서술형은 10자 이상)' : (sz - c) + '문제 더 풀면 채점할 수 있어요'}</button>`;
+  else h += `<button class="btn" data-act="grade">${P + 1}단계 채점하기</button>`;
+  return h;
+}
+function vGradeBar(v, sizes) { return `<div class="row-end" id="gbar">${gradeBarHtml(v, sizes)}</div>`; }
+
+function vP5(v, offs) {
+  const x = p5Of(v), ns = x.short.length, g = S.graded[4];
+  const shorts = x.short.map((q, i) => {
+    const val = S.ans[4][i] || '', good = g && shortOk(q, val);
+    return `<article class="qcard ${g ? (good ? 'ok' : 'bad') : ''}" id="q-4-${i}"><div class="qtop"><span class="pill">${offs[4] + i + 1}번 · 단답형</span>${g ? (good ? '<b style="color:var(--ok)">✓ 정답 +3</b>' : '<b style="color:var(--bad)">✗ 다시 보기</b>') : ''}</div>
+    <label class="qq" for="p5-${i}">${q.q}</label><input class="t" id="p5-${i}" data-p5="${i}" autocomplete="off" maxlength="30" placeholder="낱말로 답을 쓰세요" value="${esc(val)}" ${g ? 'readonly' : ''} style="max-width:420px${g ? ';background:#F6F8F7' : ''}">
+    ${g ? `<p class="why"><b>정답: ${q.ans}</b> · ${q.w}</p>` : ''}</article>`;
+  }).join('');
+  const essays = x.essay.map((e, j) => {
+    const i = ns + j, val = S.ans[4][i] || '', r = essayEval(e, val);
+    const cls = g ? (r.score === r.max ? 'ok' : r.score > 0 ? 'part' : 'bad') : '';
+    const rub = e.rubric.map((c, k) => { const hit = r.hits[k]; return `<span style="${g ? (hit ? 'color:var(--ok);font-weight:700' : 'color:var(--muted)') : ''}">${g ? (hit ? '✓' : '–') : '·'} ${c.d} (${g ? (hit ? c.pts : 0) + '/' : ''}${c.pts}점)</span>`; }).join('');
+    return `<article class="qcard ${cls}" id="q-4-${i}"><div class="qtop"><span class="pill">${offs[4] + i + 1}번 · 서술형 8점</span>${g ? `<b style="color:${r.score === r.max ? 'var(--ok)' : r.score > 0 ? '#8A3D08' : 'var(--bad)'}">가채점 ${r.score} / ${r.max}점</b>` : ''}</div>
+    ${e.s ? `<div class="scene"><b>상황</b> · ${e.s}</div>` : ''}<label class="qq" for="p5-${i}">${e.q}</label>
+    <div class="rubric"><b>채점 기준</b>${rub}</div>
+    <textarea class="essay" id="p5-${i}" data-p5="${i}" rows="4" maxlength="600" placeholder="두세 문장으로 써 보세요" ${g ? 'readonly' : ''}>${esc(val)}</textarea>
+    <span class="count" id="cnt-${i}">${String(val).trim().length}자 · 10자 이상 써야 채점할 수 있어요</span>
+    ${g ? `<p class="why"><b>예시 답안</b> · ${e.model}</p>` : ''}</article>`;
+  }).join('');
+  return `<section style="display:flex;flex-direction:column;gap:18px"><div><h2 class="disp">5. 운영체제의 자원 관리</h2><p class="lead" style="font-size:15px;margin-top:4px">운영체제는 CPU·메모리·저장 장치·입출력 장치 같은 자원을 여러 프로그램이 나눠 쓰도록 관리해요. 단답형은 낱말로, 서술형은 문장으로 써 보세요.</p></div>
+  <div class="rule"><b>5단계 채점</b><span>단답형 3문항 × 3점</span><span>서술형 2문항 × 8점 (채점 기준별 부분 점수)</span><span>서술형은 키워드로 가채점한 점수예요. 선생님이 답안을 읽고 최종 점수를 정해요.</span></div>
+  <h3 style="margin:4px 0 0;font-size:18px">단답형</h3><div class="qlist">${shorts}</div><h3 style="margin:4px 0 0;font-size:18px">서술형</h3><div class="qlist">${essays}</div></section>`;
+}
+
+function vFinal(v, sizes, offs, labels, sum, all) {
+  const verdict = !all ? '모든 단계를 채점해야 최종 점수를 보낼 수 있어요. 위의 단계 버튼을 눌러 남은 단계를 마무리하세요.' : sum >= 90 ? '아주 잘했어요! 컴퓨터가 입력·처리·출력·저장·통신으로 일하는 방식을 잘 이해하고 있어요.' : sum >= 70 ? '잘했어요. 틀린 문제를 다시 눌러 설명을 읽어 보세요.' : '좋은 출발이에요. 틀린 문제의 설명을 읽고 다른 유형으로 다시 도전해 보세요.';
+  const rows = PS.map((p) => { const sc = score(v, p), mx = maxOf(v, p); return `<div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;gap:12px;font-size:15px"><b>${p + 1}. ${labels[p]}</b><span style="color:var(--sub)">${S.graded[p] ? (p === 4 ? '가채점 ' : '') + sc + ' / ' + mx + '점' : '아직 채점 전'}</span></div><div class="bar"><i style="width:${S.graded[p] ? Math.round(sc / mx * 100) : 0}%;background:${BAR[p]}"></i></div></div>`; }).join('');
+  const wl = [];
+  PS.forEach((p) => { if (!S.graded[p]) return; for (let k = 0; k < sizes[p]; k++) { const i = p === 1 ? DATA.order[k] : k; if (ok(v, p, i)) continue; const n = offs[p] + k + 1; wl.push(`<button class="wbtn" data-act="jump" data-p="${p}" data-k="${k}">${n}번 · ${p === 1 ? v.p2[i].t : p === 0 ? v.p1[i].t : p === 4 ? (k < p5Of(v).short.length ? '단답형' : '서술형') : n + '번 문제'}</button>`); } });
+  const notYet = PS.filter((p) => !S.graded[p]).map((p) => p + 1);
+  const note = { sending: ['보내는 중이에요…', 'var(--sub)'], ok: ['선생님 시트로 최종 점수를 보냈어요. 수고했어요!', 'var(--ok)'], fail: ['보내지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요.', 'var(--bad)'] }[S.sent] || (notYet.length ? ['채점하지 않은 단계: ' + notYet.join(', ') + '단계', 'var(--bad)'] : null);
+  const can = all && S.sent !== 'ok' && S.sent !== 'sending';
+  return `<section style="display:flex;flex-direction:column;gap:18px"><div class="banner"><div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:14px;font-weight:700;opacity:.8">${esc(S.sid + ' ' + S.name)} · ${v.name} ${v.theme} · 최종 점수</span><span class="big">${sum}<span> / 100점</span></span></div><p style="margin:0;font-size:16px;line-height:1.6;max-width:520px">${verdict}</p></div>
+  <div class="panel" style="padding:20px;display:flex;flex-direction:column;gap:14px">${rows}</div>
+  ${wl.length ? `<div class="panel" style="display:flex;flex-direction:column;gap:10px"><b style="font-size:16px">틀린 문제 다시 보기 · 누르면 그 문제로 가요</b><div style="display:flex;flex-wrap:wrap;gap:8px">${wl.join('')}</div></div>` : ''}
+  <div class="row-end">${note ? `<span class="grow" role="status" style="color:${note[1]};font-size:15px;line-height:1.5">${note[0]}</span>` : ''}<button class="btn ghost" data-act="again">다른 유형 풀기</button><button class="btn" data-act="submit" ${can ? '' : 'disabled'}>${S.sent === 'ok' ? '보내기 완료' : S.sent === 'fail' ? '다시 보내기' : '선생님께 최종 점수 보내기'}</button></div></section>`;
+}
+
+function render() {
+  const v = ver(), app = document.getElementById('app');
+  if (S.screen !== 'quiz' || !v) { app.innerHTML = vStart(); return; }
+  const sizes = PS.map((p) => size(v, p));
+  const offs = [0]; for (let p = 1; p < NP; p++) offs.push(offs[p - 1] + sizes[p - 1]);
+  const labels = [DATA.parts[0], DATA.parts[1], DATA.parts[2], v.theme, DATA.parts[4]];
+  const sum = PS.reduce((a, p) => a + (S.graded[p] ? score(v, p) : 0), 0);
+  const all = S.graded.every(Boolean);
+  let body = '';
+  if (S.part === 1) body = vP2(v, offs) + vGradeBar(v, sizes);
+  else if (S.part === 4) body = vP5(v, offs) + vGradeBar(v, sizes);
+  else if (S.part === NP) body = vFinal(v, sizes, offs, labels, sum, all);
+  else body = vOne(v, offs) + vGradeBar(v, sizes);
+  app.innerHTML = vHeader(v, sizes, sum) + vSteps(v, sizes, labels, all) + body;
+}
+
+async function submit() {
+  const v = ver(); if (!v || !S.graded.every(Boolean) || S.sent === 'ok' || S.sent === 'sending') return;
+  if (!/^https:\/\/script\.google\.com\//.test(SHEET_URL)) { alert('선생님 설정이 필요해요: HTML 파일의 SHEET_URL에 웹 앱 주소를 넣어 주세요.'); return; }
+  const labels = DATA.parts; // 시트 칸 이름이 유형마다 같도록 고정 이름 사용
+  const parts = PS.map((p) => ({ label: (p + 1) + '. ' + labels[p] + (p === 4 ? '(가채점)' : ''), score: score(v, p) }));
+  const total = parts.reduce((a, p) => a + p.score, 0);
+  const max = PS.reduce((a, p) => a + maxOf(v, p), 0);
+  // 단답·서술형 답안과 서술형 가채점 점수도 함께 보내요 (교사가 시트에서 확인 후 최종 점수 결정)
+  const x = p5Of(v), ns = x.short.length, extra = { version: v.name + ' ' + v.theme };
+  x.short.forEach((q, i) => { extra['단답' + (i + 1)] = S.ans[4][i] || ''; });
+  x.essay.forEach((e, j) => { extra['서술' + (j + 1)] = S.ans[4][ns + j] || ''; extra['서술' + (j + 1) + '_가채점'] = essayEval(e, S.ans[4][ns + j]).score; });
+  const payload = { v: 1, quiz: QUIZ_NAME, sid: S.sid, name: S.name, total, max, parts, extra };
+  set({ sent: 'sending' });
+  try { await fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) }); set({ sent: 'ok' }); }
+  catch (e) { set({ sent: 'fail' }); }
+}
+
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'sid') S.sid = e.target.value.replace(/\s/g, '').slice(0, 10);
+  if (e.target.id === 'sname') S.name = e.target.value.slice(0, 20);
+  if (e.target.dataset && e.target.dataset.p5 !== undefined && !S.graded[4]) {
+    const i = +e.target.dataset.p5, v = ver();
+    S.ans[4][i] = e.target.value;
+    const c = document.getElementById('cnt-' + i); if (c) c.textContent = e.target.value.trim().length + '자 · 10자 이상 써야 채점할 수 있어요';
+    const gb = document.getElementById('gbar'); if (gb) gb.innerHTML = gradeBarHtml(v, PS.map((p) => size(v, p)));
+  }
+});
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+  const a = b.dataset.act, v = ver(), P = S.part;
+  if (a === 'ver') set({ ver: b.dataset.v, msg: '' });
+  else if (a === 'random') set({ ver: DATA.versions[Math.floor(Math.random() * DATA.versions.length)].id, msg: '' });
+  else if (a === 'begin') {
+    if (!S.sid || !S.name.trim()) return set({ msg: '학번과 이름을 모두 입력하세요.' });
+    if (!v) return set({ msg: '풀 유형을 하나 고르세요.' });
+    set(Object.assign({ screen: 'quiz', msg: '' }, fresh()), true);
+  }
+  else if (a === 'part') set({ part: +b.dataset.p, sel: -1 }, true);
+  else if (a === 'jump') {
+    const p = +b.dataset.p, k = +b.dataset.k;
+    set({ part: p, sel: -1 });
+    const el = document.getElementById(p === 1 ? 'p2top' : 'q-' + p + '-' + k);
+    if (el) el.scrollIntoView({ block: 'start' }); else window.scrollTo(0, 0);
+  }
+  else if (a === 'pick') { if (!S.graded[P]) { const y = window.scrollY; setAns(P, +b.dataset.i, +b.dataset.o); window.scrollTo(0, y); } }
+  else if (a === 'grade') { S.graded[P] = true; set({ sel: -1 }); }
+  else if (a === 'chip') { const i = +b.dataset.i; set({ sel: S.sel === i ? -1 : i }); }
+  else if (a === 'place') { if (S.sel >= 0) setAns(1, S.sel, b.dataset.c); }
+  else if (a === 'unplace') { if (!S.graded[1]) setAns(1, +b.dataset.i, null); }
+  else if (a === 'submit') submit();
+  else if (a === 'again') {
+    if (S.sent !== 'ok' && S.graded.every(Boolean) && !confirm('아직 점수를 보내지 않았어요. 그래도 처음으로 돌아갈까요?')) return;
+    set(Object.assign({ screen: 'start', ver: '', msg: '' }, fresh()), true);
+  }
+});
+document.addEventListener('dragstart', (e) => {
+  const c = e.target.closest && e.target.closest('.chip,.item'); if (!c || S.graded[1]) return;
+  dragI = +c.dataset.i; try { e.dataTransfer.setData('text/plain', String(dragI)); e.dataTransfer.effectAllowed = 'move'; } catch (err) {}
+});
+document.addEventListener('dragend', () => { dragI = -1; });
+document.addEventListener('dragover', (e) => { if (e.target.closest && e.target.closest('[data-drop]')) e.preventDefault(); });
+document.addEventListener('drop', (e) => {
+  const z = e.target.closest && e.target.closest('[data-drop]'); if (!z || S.graded[1]) return;
+  e.preventDefault();
+  let i = dragI; if (i < 0) { const t = parseInt(e.dataTransfer.getData('text/plain'), 10); i = isNaN(t) ? -1 : t; }
+  if (i >= 0) setAns(1, i, z.dataset.drop || null);
+});
+render();
+</script>
+</body>
+</html>
